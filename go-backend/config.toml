@@ -1,0 +1,23 @@
+# Application Configuration
+
+[server]
+# The port on which the HTTP server will listen.
+port = "8080"
+
+[database]
+# The database type to use. Can be "sqlite", "mysql", or "postgresql".
+type = "sqlite"
+
+# Connection string for the selected database.
+# For SQLite, this is the path to the database file.
+# For MySQL, it should be in the format: "user:pass@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local"
+# For PostgreSQL, it should be in the format: "host=localhost user=gorm password=gorm dbname=gorm port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+connection_string = "lunatv.db"
+
+[jwt]
+# A secret key for signing JWT tokens.
+# IMPORTANT: This should be a long, random, and securely stored string in a real application.
+secret = "your-very-secret-key"
+
+# The duration for which a JWT token is valid (e.g., "1h", "24h").
+token_lifespan = "24h"
