@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const LoginPage = () => {
@@ -7,25 +7,6 @@ const LoginPage = () => {
   const [password, setPassword] = useState('password123');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(true); // Add this state
-
-  // Pre-register the test user
-  useEffect(() => {
-    const registerTestUser = async () => {
-      try {
-        await fetch('/api/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: 'testuser', password: 'password123' }),
-        });
-      } catch (e) {
-        // Ignore errors, user might already exist
-      } finally {
-        setIsRegistering(false); // Registration is complete
-      }
-    };
-    registerTestUser();
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -59,7 +40,7 @@ const LoginPage = () => {
       <div className="w-full max-w-md p-8 space-y-8 bg-gray-800 rounded-lg shadow-lg">
         <h1 className="text-2xl font-bold text-center text-white">Login to LunaTV</h1>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <fieldset disabled={isRegistering}> {/* Disable form while registering */}
+          <fieldset>
             <div>
               <label
                 htmlFor="username"
@@ -98,10 +79,10 @@ const LoginPage = () => {
             <div>
               <button
                 type="submit"
-                disabled={loading || isRegistering}
+                disabled={loading}
                 className="w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
               >
-                {isRegistering ? 'Preparing...' : (loading ? 'Logging in...' : 'Login')}
+                {loading ? 'Logging in...' : 'Login'}
               </button>
             </div>
           </fieldset>
