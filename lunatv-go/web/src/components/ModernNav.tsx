@@ -28,9 +28,11 @@ interface ModernNavProps {
 export default function ModernNav({ showAIButton = false, onAIButtonClick }: ModernNavProps = {}) {
   const { pathname } = useLocation()
   const [searchParams] = useSearchParams()
-  const [active, setActive] = useState(pathname)
   const { siteName } = useSite()
   const [showMoreMenu, setShowMoreMenu] = useState(false)
+
+  const queryString = searchParams.toString()
+  const active = queryString ? `${pathname}?${queryString}` : pathname
 
   const [menuItems, setMenuItems] = useState<NavItem[]>([
     { icon: Home, label: '首页', href: '/', color: 'text-green-500', gradient: 'from-green-500 to-emerald-500' },
@@ -97,12 +99,6 @@ export default function ModernNav({ showAIButton = false, onAIButtonClick }: Mod
     if (newItems.length !== menuItems.length) setMenuItems(newItems)
   }, [userEmbyConfig, publicSourcesData]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    const queryString = searchParams.toString()
-    const fullPath = queryString ? `${pathname}?${queryString}` : pathname
-    setActive(fullPath)
-  }, [pathname, searchParams])
-
   const isActive = (href: string) => {
     const typeMatch = href.match(/type=([^&]+)/)?.[1]
     const decodedActive = decodeURIComponent(active)
@@ -134,7 +130,6 @@ export default function ModernNav({ showAIButton = false, onAIButtonClick }: Mod
                     key={item.label}
                     href={item.href}
                     useTransitionNav
-                    onClick={() => setActive(item.href)}
                     className='group relative flex items-center gap-2 px-3 lg:px-4 py-2 rounded-full transition-all duration-300 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 whitespace-nowrap shrink-0'
                   >
                     {active && (
@@ -197,7 +192,7 @@ export default function ModernNav({ showAIButton = false, onAIButtonClick }: Mod
                     key={item.label}
                     href={item.href}
                     useTransitionNav
-                    onClick={() => { setActive(item.href); setShowMoreMenu(false) }}
+                    onClick={() => setShowMoreMenu(false)}
                     className='flex flex-col items-center gap-2 p-3 rounded-2xl transition-all duration-300 active:scale-95 hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
                   >
                     <div className={`flex items-center justify-center w-12 h-12 rounded-2xl ${active ? `bg-linear-to-br ${item.gradient}` : 'bg-gray-100 dark:bg-gray-800'}`}>
@@ -226,7 +221,6 @@ export default function ModernNav({ showAIButton = false, onAIButtonClick }: Mod
                 key={item.label}
                 href={item.href}
                 useTransitionNav
-                onClick={() => setActive(item.href)}
                 className='flex flex-col items-center justify-center min-w-[60px] flex-1 py-2 px-1 transition-all duration-200 active:scale-95'
               >
                 <Icon className={`w-6 h-6 mb-1 transition-colors duration-200 ${active ? item.color : 'text-gray-600 dark:text-gray-400'}`} />

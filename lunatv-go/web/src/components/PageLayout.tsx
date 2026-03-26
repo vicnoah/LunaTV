@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { BackButton } from './BackButton'
 import MobileBottomNav from './MobileBottomNav'
@@ -16,13 +15,12 @@ interface PageLayoutProps {
 const PageLayout = ({ useModernNav = true }: PageLayoutProps) => {
   const { pathname } = useLocation()
   const { siteName } = useSite()
-  const [aiEnabled] = useState(false)
 
   if (useModernNav) {
     return (
       <>
         <div className='w-full min-h-screen'>
-          <ModernNav showAIButton={aiEnabled} />
+          <ModernNav />
 
           <div className='md:hidden fixed top-0 left-0 right-0 z-40 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-sm'>
             <div className='flex items-center justify-between h-11 px-4'>

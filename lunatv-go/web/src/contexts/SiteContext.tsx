@@ -48,11 +48,20 @@ const SiteContext = createContext<SiteContextValue>({
   loading: true,
 })
 
+interface SiteState {
+  siteName: string
+  announcement: string
+  runtimeConfig: RuntimeConfig | null
+  loading: boolean
+}
+
 export function SiteProvider({ children }: { children: ReactNode }) {
-  const [siteName, setSiteName] = useState('MoonTV')
-  const [announcement, setAnnouncement] = useState('')
-  const [runtimeConfig, setRuntimeConfig] = useState<RuntimeConfig | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [state, setState] = useState<SiteState>({
+    siteName: 'MoonTV',
+    announcement: '',
+    runtimeConfig: null,
+    loading: true,
+  })
 
   useEffect(() => {
     const fetchConfig = async () => {
@@ -60,24 +69,21 @@ export function SiteProvider({ children }: { children: ReactNode }) {
         const res = await fetch('/api/server-config')
         if (res.ok) {
           const data = await res.json()
-          const config: RuntimeConfig = {
-            ...defaultRuntimeConfig,
-            ...data,
-          }
-          setSiteName(data.siteName || data.SITE_NAME || 'MoonTV')
-          setAnnouncement(data.announcement || data.ANNOUNCEMENT || '')
-          setRuntimeConfig(config)
-          // Inject into window for legacy components
+          const config: RuntimeConfig = { ...defaultRuntimeConfig, ...data }
           ;(window as unknown as { RUNTIME_CONFIG: RuntimeConfig }).RUNTIME_CONFIG = config
+          setState({
+            siteName: data.siteName || data.SITE_NAME || 'MoonTV',
+            announcement: data.announcement || data.ANNOUNCEMENT || '',
+            runtimeConfig: config,
+            loading: false,
+          })
         } else {
-          setRuntimeConfig(defaultRuntimeConfig)
           ;(window as unknown as { RUNTIME_CONFIG: RuntimeConfig }).RUNTIME_CONFIG = defaultRuntimeConfig
+          setState(s => ({ ...s, runtimeConfig: defaultRuntimeConfig, loading: false }))
         }
       } catch {
-        setRuntimeConfig(defaultRuntimeConfig)
         ;(window as unknown as { RUNTIME_CONFIG: RuntimeConfig }).RUNTIME_CONFIG = defaultRuntimeConfig
-      } finally {
-        setLoading(false)
+        setState(s => ({ ...s, runtimeConfig: defaultRuntimeConfig, loading: false }))
       }
     }
 
@@ -85,7 +91,7 @@ export function SiteProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <SiteContext.Provider value={{ siteName, announcement, runtimeConfig, loading }}>
+    <SiteContext.Provider value={state}>
       {children}
     </SiteContext.Provider>
   )

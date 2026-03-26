@@ -1,12 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Box, Cat, Clover, Film, Globe, Home, PlaySquare, Radio, Star, Tv } from 'lucide-react'
+import { Cat, Clover, Film, Globe, Home, PlaySquare, Radio, Star, Tv } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { useCallback, useEffect, useRef, useState } from 'react'
-
-function cn(...classes: (string | boolean | undefined | null)[]): string {
-  return classes.filter(Boolean).join(' ')
-}
+import { cn } from '@/lib/utils'
 
 interface NavItem {
   icon: typeof Home
@@ -111,6 +108,3 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
 }
 
 export default MobileBottomNav
-
-// Suppress unused import warning
-void Box
