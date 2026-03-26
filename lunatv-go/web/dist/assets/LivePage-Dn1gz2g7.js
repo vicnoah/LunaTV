@@ -1,0 +1,1 @@
+import{j as t}from"./query-DjRcnUZi.js";function a(){return t.jsxs("div",{className:"p-8",children:[t.jsx("h1",{className:"text-2xl font-bold text-gray-900 dark:text-white",children:"直播"}),t.jsx("p",{className:"text-gray-500 dark:text-gray-400 mt-2",children:"页面开发中..."})]})}export{a as default};
