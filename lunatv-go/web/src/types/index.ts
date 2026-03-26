@@ -103,6 +103,8 @@ export interface SearchResult {
   type_name?: string
   douban_id?: number
   remarks?: string
+  vod_remarks?: string
+  rate?: string
   drama_name?: string
   metadata?: {
     author?: string

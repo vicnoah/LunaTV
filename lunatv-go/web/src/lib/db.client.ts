@@ -57,11 +57,20 @@ export async function clearSearchHistory(): Promise<void> {
   await api.delete('/api/searchhistory')
 }
 
-// Event subscription stub for compatibility
-type DataUpdateCallback = (type: string, data: any) => void
-const subscribers = new Set<DataUpdateCallback>()
+// Event subscription system for compatibility with original db.client
+type DataUpdateCallback = (data: any) => void
+const eventSubscribers = new Map<string, Set<DataUpdateCallback>>()
 
-export function subscribeToDataUpdates(callback: DataUpdateCallback): () => void {
-  subscribers.add(callback)
-  return () => subscribers.delete(callback)
+export function subscribeToDataUpdates(eventType: string, callback: DataUpdateCallback): () => void {
+  if (!eventSubscribers.has(eventType)) {
+    eventSubscribers.set(eventType, new Set())
+  }
+  eventSubscribers.get(eventType)!.add(callback)
+  return () => {
+    eventSubscribers.get(eventType)?.delete(callback)
+  }
+}
+
+export function emitDataUpdate(eventType: string, data: any): void {
+  eventSubscribers.get(eventType)?.forEach(cb => cb(data))
 }

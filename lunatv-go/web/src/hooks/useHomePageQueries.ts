@@ -24,9 +24,8 @@ export interface HomePageQueriesResult {
 }
 
 export function useHomePageQueries(): HomePageQueriesResult {
-  const combine = useCallback((results: ReturnType<typeof useQueries<any[]>>['entries']) => {
-    const [moviesResult, tvResult, varietyResult, animeResult, shortDramasResult, bangumiResult] =
-      results as any[]
+  const combine = useCallback((results: any[]) => {
+    const [moviesResult, tvResult, varietyResult, animeResult, shortDramasResult, bangumiResult] = results
 
     const data: HomePageData = {
       hotMovies: moviesResult.data?.code === 200 ? moviesResult.data.list : [],
