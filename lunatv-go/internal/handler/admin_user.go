@@ -42,28 +42,16 @@ func (h *adminUserHandler) UserAction(c *gin.Context) {
 		return
 	}
 
-	cfg, err := getAdminConfig(h.db)
+	cfg, err := adminConfigFromCtx(c, h.db)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "内部错误"})
 		return
 	}
 
-	// Determine operator role.
-	operatorIsOwner := isOwner(callerName)
-	var operatorRole string
-	if operatorIsOwner {
-		operatorRole = "owner"
-	} else {
-		for _, u := range cfg.UserConfig.Users {
-			if u.Username == callerName && !u.Banned && (u.Role == "admin" || u.Role == "owner") {
-				operatorRole = u.Role
-				break
-			}
-		}
-		if operatorRole == "" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "权限不足"})
-			return
-		}
+	operatorRole := callerRole(cfg, callerName)
+	if operatorRole == "" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "权限不足"})
+		return
 	}
 
 	// userGroup and batchUpdateUserGroups don't need a targetUsername.
@@ -73,7 +61,6 @@ func (h *adminUserHandler) UserAction(c *gin.Context) {
 		return
 	}
 
-	// Self-operation guard.
 	selfActions := map[string]bool{"changePassword": true, "deleteUser": true, "updateUserApis": true,
 		"userGroup": true, "updateUserGroups": true, "batchUpdateUserGroups": true}
 	if !selfActions[action] && callerName == targetUsername {
@@ -81,7 +68,6 @@ func (h *adminUserHandler) UserAction(c *gin.Context) {
 		return
 	}
 
-	// Find target entry in config.
 	var targetIdx int = -1
 	for i, u := range cfg.UserConfig.Users {
 		if u.Username == targetUsername {
@@ -106,7 +92,6 @@ func (h *adminUserHandler) UserAction(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "服务器错误"})
 			return
 		}
-		// Create DB user.
 		dbUser := model.User{
 			Username:     targetUsername,
 			PasswordHash: string(hash),
@@ -116,7 +101,6 @@ func (h *adminUserHandler) UserAction(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "创建用户失败"})
 			return
 		}
-		// Add to config.
 		newEntry := model.UserEntry{Username: targetUsername, Role: "user"}
 		if ug, _ := body["userGroup"].(string); ug != "" {
 			newEntry.Tags = []string{ug}
@@ -355,31 +339,18 @@ func (h *adminUserHandler) GenerateTVBoxToken(c *gin.Context) {
 		return
 	}
 
-	cfg, err := getAdminConfig(h.db)
+	cfg, err := adminConfigFromCtx(c, h.db)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "内部错误"})
 		return
 	}
 
-	// Find caller role.
-	callerIsOwner := isOwner(callerName)
-	callerRole := "user"
-	if callerIsOwner {
-		callerRole = "owner"
-	} else {
-		for _, u := range cfg.UserConfig.Users {
-			if u.Username == callerName {
-				callerRole = u.Role
-				break
-			}
-		}
-	}
-	if callerRole != "owner" && callerRole != "admin" {
+	role := callerRole(cfg, callerName)
+	if role != "owner" && role != "admin" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Permission denied"})
 		return
 	}
 
-	// Find target.
 	targetIdx := -1
 	for i, u := range cfg.UserConfig.Users {
 		if u.Username == body.Username {
@@ -391,7 +362,7 @@ func (h *adminUserHandler) GenerateTVBoxToken(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
-	if callerRole == "admin" && (cfg.UserConfig.Users[targetIdx].Role == "owner" || cfg.UserConfig.Users[targetIdx].Role == "admin") {
+	if role == "admin" && (cfg.UserConfig.Users[targetIdx].Role == "owner" || cfg.UserConfig.Users[targetIdx].Role == "admin") {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Cannot modify admin or owner users"})
 		return
 	}
@@ -428,32 +399,21 @@ func (h *adminUserHandler) DeleteTVBoxToken(c *gin.Context) {
 		return
 	}
 
-	cfg, err := getAdminConfig(h.db)
+	cfg, err := adminConfigFromCtx(c, h.db)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "内部错误"})
 		return
 	}
 
-	callerIsOwner := isOwner(callerName)
-	callerRole := "user"
-	if callerIsOwner {
-		callerRole = "owner"
-	} else {
-		for _, u := range cfg.UserConfig.Users {
-			if u.Username == callerName {
-				callerRole = u.Role
-				break
-			}
-		}
-	}
-	if callerRole != "owner" && callerRole != "admin" {
+	role := callerRole(cfg, callerName)
+	if role != "owner" && role != "admin" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Permission denied"})
 		return
 	}
 
 	for i, u := range cfg.UserConfig.Users {
 		if u.Username == username {
-			if callerRole == "admin" && (u.Role == "owner" || u.Role == "admin") {
+			if role == "admin" && (u.Role == "owner" || u.Role == "admin") {
 				c.JSON(http.StatusForbidden, gin.H{"error": "Cannot modify admin or owner users"})
 				return
 			}

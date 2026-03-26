@@ -12,6 +12,7 @@ import (
 	"gorm.io/gorm"
 
 	"moontv/internal/model"
+	"moontv/internal/service"
 )
 
 // getAdminConfig loads the AdminConfig from the DB (key="main").
@@ -106,6 +107,20 @@ func isAdminOrOwner(cfg *model.AdminConfig, username string) bool {
 	return false
 }
 
+// callerRole returns the effective role ("owner", "admin", or "") for a given username.
+// An empty string means the caller has no elevated privileges.
+func callerRole(cfg *model.AdminConfig, username string) string {
+	if isOwner(username) {
+		return "owner"
+	}
+	for _, u := range cfg.UserConfig.Users {
+		if u.Username == username && !u.Banned && (u.Role == "admin" || u.Role == "owner") {
+			return u.Role
+		}
+	}
+	return ""
+}
+
 // requireOwner is a middleware that allows only the site owner.
 func requireOwner(_ *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -124,6 +139,7 @@ func requireOwner(_ *gorm.DB) gin.HandlerFunc {
 }
 
 // requireAdmin is a middleware that allows admin or owner.
+// It stores the loaded config under key "adminConfig" for downstream handlers.
 func requireAdmin(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		username, _, ok := callerUsername(c)
@@ -144,6 +160,17 @@ func requireAdmin(db *gorm.DB) gin.HandlerFunc {
 		c.Set("adminConfig", cfg)
 		c.Next()
 	}
+}
+
+// adminConfigFromCtx returns the AdminConfig cached by requireAdmin, falling
+// back to a fresh DB load when the route was protected by requireOwner instead.
+func adminConfigFromCtx(c *gin.Context, db *gorm.DB) (*model.AdminConfig, error) {
+	if v, exists := c.Get("adminConfig"); exists {
+		if cfg, ok := v.(*model.AdminConfig); ok {
+			return cfg, nil
+		}
+	}
+	return getAdminConfig(db)
 }
 
 // AdminHandler handles top-level admin config endpoints.
@@ -187,7 +214,7 @@ func RegisterAdmin(rg *gin.RouterGroup, db *gorm.DB) {
 
 // GetConfig handles GET /api/admin/config.
 func (h *AdminHandler) GetConfig(c *gin.Context) {
-	cfg, err := getAdminConfig(h.db)
+	cfg, err := adminConfigFromCtx(c, h.db)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "获取管理员配置失败"})
 		return
@@ -270,7 +297,7 @@ func (h *AdminHandler) FetchConfigSubscription(c *gin.Context) {
 		return
 	}
 
-	content, err := fetchAndDecodeSubscription(body.URL)
+	content, err := service.FetchConfigSubscription(body.URL)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "拉取配置失败: " + err.Error()})
 		return
@@ -380,7 +407,7 @@ func (h *AdminHandler) Reset(c *gin.Context) {
 
 // GetPlayStats handles GET /api/admin/play-stats.
 func (h *AdminHandler) GetPlayStats(c *gin.Context) {
-	cfg, err := getAdminConfig(h.db)
+	cfg, err := adminConfigFromCtx(c, h.db)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "内部错误"})
 		return

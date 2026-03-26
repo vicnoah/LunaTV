@@ -60,7 +60,7 @@ func (h *adminMiscHandler) UpdateNetdisk(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid timeout value"})
 		return
 	}
-	adminCfg, err := getAdminConfig(h.db)
+	adminCfg, err := adminConfigFromCtx(c, h.db)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "内部错误"})
 		return
@@ -88,7 +88,7 @@ func (h *adminMiscHandler) UpdateYouTube(c *gin.Context) {
 	if cfg.MaxResults < 1 || cfg.MaxResults > 50 {
 		cfg.MaxResults = 25
 	}
-	adminCfg, err := getAdminConfig(h.db)
+	adminCfg, err := adminConfigFromCtx(c, h.db)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "内部错误"})
 		return
@@ -126,7 +126,7 @@ func (h *adminMiscHandler) UpdateAIRecommend(c *gin.Context) {
 			}
 		}
 	}
-	adminCfg, err := getAdminConfig(h.db)
+	adminCfg, err := adminConfigFromCtx(c, h.db)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "内部错误"})
 		return
@@ -150,7 +150,7 @@ func (h *adminMiscHandler) UpdateTVBoxProxy(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "代理URL不能为空"})
 		return
 	}
-	adminCfg, err := getAdminConfig(h.db)
+	adminCfg, err := adminConfigFromCtx(c, h.db)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "内部错误"})
 		return
@@ -178,7 +178,7 @@ func (h *adminMiscHandler) UpdateTVBoxSecurity(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "频率限制应在1-1000之间"})
 		return
 	}
-	adminCfg, err := getAdminConfig(h.db)
+	adminCfg, err := adminConfigFromCtx(c, h.db)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "内部错误"})
 		return
@@ -202,7 +202,7 @@ func (h *adminMiscHandler) UpdateVideoProxy(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "代理URL不能为空"})
 		return
 	}
-	adminCfg, err := getAdminConfig(h.db)
+	adminCfg, err := adminConfigFromCtx(c, h.db)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "内部错误"})
 		return
@@ -217,7 +217,7 @@ func (h *adminMiscHandler) UpdateVideoProxy(c *gin.Context) {
 
 // GetTrustedNetwork handles GET /api/admin/trusted-network.
 func (h *adminMiscHandler) GetTrustedNetwork(c *gin.Context) {
-	cfg, err := getAdminConfig(h.db)
+	cfg, err := adminConfigFromCtx(c, h.db)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "内部错误"})
 		return
@@ -236,7 +236,7 @@ func (h *adminMiscHandler) UpdateTrustedNetwork(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "请求格式错误"})
 		return
 	}
-	adminCfg, err := getAdminConfig(h.db)
+	adminCfg, err := adminConfigFromCtx(c, h.db)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "内部错误"})
 		return
@@ -251,7 +251,7 @@ func (h *adminMiscHandler) UpdateTrustedNetwork(c *gin.Context) {
 
 // GetShortDrama handles GET /api/admin/shortdrama.
 func (h *adminMiscHandler) GetShortDrama(c *gin.Context) {
-	cfg, err := getAdminConfig(h.db)
+	cfg, err := adminConfigFromCtx(c, h.db)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "内部错误"})
 		return
@@ -282,7 +282,7 @@ func (h *adminMiscHandler) UpdateShortDrama(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "启用备用API时必须提供备用API地址"})
 		return
 	}
-	adminCfg, err := getAdminConfig(h.db)
+	adminCfg, err := adminConfigFromCtx(c, h.db)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "内部错误"})
 		return
@@ -304,7 +304,7 @@ func (h *adminMiscHandler) UpdateDownloadConfig(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "请求格式错误"})
 		return
 	}
-	adminCfg, err := getAdminConfig(h.db)
+	adminCfg, err := adminConfigFromCtx(c, h.db)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "内部错误"})
 		return
@@ -319,7 +319,7 @@ func (h *adminMiscHandler) UpdateDownloadConfig(c *gin.Context) {
 
 // GetDanmuAPI handles GET /api/admin/danmu-api.
 func (h *adminMiscHandler) GetDanmuAPI(c *gin.Context) {
-	cfg, err := getAdminConfig(h.db)
+	cfg, err := adminConfigFromCtx(c, h.db)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "内部错误"})
 		return
@@ -343,7 +343,7 @@ func (h *adminMiscHandler) UpdateDanmuAPI(c *gin.Context) {
 	if cfg.Timeout < 5 || cfg.Timeout > 60 {
 		cfg.Timeout = 15
 	}
-	adminCfg, err := getAdminConfig(h.db)
+	adminCfg, err := adminConfigFromCtx(c, h.db)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "内部错误"})
 		return
@@ -426,7 +426,7 @@ func (h *adminMiscHandler) ExportData(c *gin.Context) {
 		return
 	}
 
-	adminCfg, err := getAdminConfig(h.db)
+	adminCfg, err := adminConfigFromCtx(c, h.db)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "内部错误"})
 		return

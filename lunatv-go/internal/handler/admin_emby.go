@@ -66,7 +66,7 @@ func (h *adminEmbyHandler) EmbyAction(c *gin.Context) {
 
 // ExportEmby handles GET /api/admin/emby/export.
 func (h *adminEmbyHandler) ExportEmby(c *gin.Context) {
-	cfg, err := getAdminConfig(h.db)
+	cfg, err := adminConfigFromCtx(c, h.db)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "内部错误"})
 		return
@@ -93,7 +93,7 @@ func (h *adminEmbyHandler) ImportEmby(c *gin.Context) {
 		return
 	}
 
-	cfg, err := getAdminConfig(h.db)
+	cfg, err := adminConfigFromCtx(c, h.db)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "内部错误"})
 		return

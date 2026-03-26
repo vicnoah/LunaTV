@@ -44,7 +44,7 @@ func (h *adminSourceHandler) SourceAction(c *gin.Context) {
 		return
 	}
 
-	cfg, err := getAdminConfig(h.db)
+	cfg, err := adminConfigFromCtx(c, h.db)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "内部错误"})
 		return
@@ -153,7 +153,6 @@ func (h *adminSourceHandler) SourceAction(c *gin.Context) {
 			return
 		}
 		cfg.SourceConfig = append(cfg.SourceConfig[:idx], cfg.SourceConfig[idx+1:]...)
-		// Clean up user/tag API references.
 		removeKeyFromUsersAndTags(cfg, key)
 
 	case "batch_disable":
@@ -324,7 +323,7 @@ func (h *adminSourceHandler) ValidateSource(c *gin.Context) {
 		return
 	}
 
-	cfg, err := getAdminConfig(h.db)
+	cfg, err := adminConfigFromCtx(c, h.db)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "内部错误"})
 		return
@@ -370,7 +369,7 @@ func (h *adminSourceHandler) CategoryAction(c *gin.Context) {
 		return
 	}
 
-	cfg, err := getAdminConfig(h.db)
+	cfg, err := adminConfigFromCtx(c, h.db)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "内部错误"})
 		return
@@ -475,23 +474,20 @@ func findSourceIdx(cfg *model.AdminConfig, key string) int {
 }
 
 func removeKeyFromUsersAndTags(cfg *model.AdminConfig, key string) {
-	for i := range cfg.UserConfig.Users {
-		newApis := make([]string, 0)
-		for _, api := range cfg.UserConfig.Users[i].EnabledApis {
+	filter := func(apis []string) []string {
+		out := apis[:0]
+		for _, api := range apis {
 			if api != key {
-				newApis = append(newApis, api)
+				out = append(out, api)
 			}
 		}
-		cfg.UserConfig.Users[i].EnabledApis = newApis
+		return out
+	}
+	for i := range cfg.UserConfig.Users {
+		cfg.UserConfig.Users[i].EnabledApis = filter(cfg.UserConfig.Users[i].EnabledApis)
 	}
 	for i := range cfg.UserConfig.Tags {
-		newApis := make([]string, 0)
-		for _, api := range cfg.UserConfig.Tags[i].EnabledApis {
-			if api != key {
-				newApis = append(newApis, api)
-			}
-		}
-		cfg.UserConfig.Tags[i].EnabledApis = newApis
+		cfg.UserConfig.Tags[i].EnabledApis = filter(cfg.UserConfig.Tags[i].EnabledApis)
 	}
 }
 

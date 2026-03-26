@@ -33,7 +33,7 @@ func (h *adminLiveHandler) LiveAction(c *gin.Context) {
 	action, _ := body["action"].(string)
 	key, _ := body["key"].(string)
 
-	cfg, err := getAdminConfig(h.db)
+	cfg, err := adminConfigFromCtx(c, h.db)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "内部错误"})
 		return
@@ -68,7 +68,6 @@ func (h *adminLiveHandler) LiveAction(c *gin.Context) {
 			UA: ua, EPG: epg, IsTVBox: isTVBox,
 			From: "custom",
 		}
-		// Count channels.
 		ch := countChannels(url)
 		liveItem.ChannelNumber = &ch
 		cfg.LiveConfig = append(cfg.LiveConfig, liveItem)
@@ -166,7 +165,7 @@ func (h *adminLiveHandler) LiveAction(c *gin.Context) {
 
 // RefreshLive handles POST /api/admin/live/refresh.
 func (h *adminLiveHandler) RefreshLive(c *gin.Context) {
-	cfg, err := getAdminConfig(h.db)
+	cfg, err := adminConfigFromCtx(c, h.db)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "内部错误"})
 		return
